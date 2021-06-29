@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: back
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: back
+    spec:
+      containers:
+        - name: hasher
+          image: aminejlizi/hasher
+        - name: rng
+          image: aminejlizi/rng
+        - name: worker
+          image: aminejlizi/worker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: db
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  ports:
+    - port: 6379
+      protocol: TCP
+      targetPort: 6379
+  type: ClusterIP
+  selector:
+    app: dockercoins
+    tier: db 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: front
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: front
+    spec:
+      containers:
+        - name: webui
+          image: aminejlizi/webui:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: front
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  type: NodePort
+  selector:
+    app: dockercoins
+    tier: front
+
+
